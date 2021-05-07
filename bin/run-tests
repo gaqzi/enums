@@ -1,0 +1,16 @@
+#!/bin/bash
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+go test -race -v ./...
+exit_status=$?
+
+if [ "$exit_status" != 0 ]; then
+  echo -e "${RED}FAIL${NC}"
+else
+  echo -e "${GREEN}PASS${NC}"
+fi
+
+exit $exit_status
