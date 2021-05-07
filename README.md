@@ -12,11 +12,11 @@ For the sake of this package an `enum` is a named type with multiple
 values which you're operating on as a collection. They could be strings,
 ints, and even complex types like functions or structs.
 
+## Example
+
 For example, I have an enum type for feature flags. For each request
 I call a 3rdparty service to check the state of each flag, so whenever
-a new flag is created it needs to be added to the all function.
-
-## Example
+a new flag is created it needs to be added to the All function.
 
 ```golang
 type Flag string
