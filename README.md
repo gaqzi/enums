@@ -3,7 +3,10 @@ enums
 
 Uses the AST to find all variables of a certain type in a package. 
 This is useful for cases where you need to ensure that all values 
-of a type is accounted for somewhere.
+of a type is accounted for somewhere. There is an overlap with the
+[exhaustive] project which does this for `switch` statements.
+
+[exhaustive]: https://github.com/nishanths/exhaustive
 
 For the sake of this package an `enum` is a named type with multiple
 values which you're operating on as a collection. They could be strings,
