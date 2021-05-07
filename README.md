@@ -34,19 +34,10 @@ func TestAllFlagsCovered(t *testing.T) {
     matches, err := enums.All("./feature", "feature.Flag")
     require.NoError(t, err)
 
-    require.Equal(
+    require.Empty(
         t,
-        enums.Diff{
-            Missing: enums.Collection{
-                {
-                    Type:  "cool.tld/feature.Flag",
-                    Name:  "DeployOneThing",
-                    Value: `"deploy-one-thing"`,
-                },
-            }
-        },
         matches.Diff(full.AllFlags()),
-        "expected to have an extra value indicated",
+        "expected all declared flags to be in AllFlags",
     )
 }
 ```
