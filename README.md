@@ -38,14 +38,7 @@ Using enums we can test that we haven't missed out on a new flag:
 
 ```golang
 func TestAllFlagsCovered(t *testing.T) {
-    matches, err := enums.All("./feature", "feature.Flag")
-    require.NoError(t, err)
-
-    require.Empty(
-        t,
-        matches.Diff(full.AllFlags()),
-        "expected all declared flags to be in AllFlags",
-    )
+    enumstest.NoDiff(t, "./feature", "feature.Flag", full.AllFlags())
 }
 ```
 
