@@ -20,7 +20,10 @@ type Enum struct {
 	Value string // all values are represented as strings from the AST
 }
 
-// All finds all variables of typ in the package at path
+// All finds all variables of typ in pkg
+//   pkg is a full or relative path.
+//   typ is a type in the form: pkgname.Type
+// Example: All("./feature", "feature.Flag")
 func All(pkg string, typ string) (Collection, error) {
 	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo}
 	pkgs, err := packages.Load(&cfg, pkg)
