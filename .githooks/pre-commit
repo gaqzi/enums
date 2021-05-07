@@ -1,0 +1,13 @@
+#!/bin/bash
+
+hook_dir=$(dirname "$0")/../../bin
+
+function changed-go-files() {
+  git diff --cached --name-only --diff-filter=ACM | grep .go$ >/dev/null 2>&1
+}
+
+if ! changed-go-files; then
+  exit 0
+fi
+
+exec ${hook_dir}/lint --new-from-rev=HEAD~1

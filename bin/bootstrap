@@ -1,0 +1,11 @@
+#!/bin/bash
+# shellcheck disable=SC2016
+# I use single quotes when I don't want them to evaluate
+bin_dir=$(dirname "$0")
+
+echo "Installing git hooks..."
+for hook in $bin_dir/../.githooks/*; do
+  if [ -x "$hook" ]; then
+    ln -sfv "$(realpath $hook)" .git/hooks/
+  fi
+done
