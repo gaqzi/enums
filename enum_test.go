@@ -20,7 +20,7 @@ func TestAll(t *testing.T) {
 		matches, err := enums.All("./testdata/singlematch", "singlematch.Flag")
 		require.NoError(t, err, "error when scanning testdata/singlematch")
 
-		require.Equal(
+		require.ElementsMatch(
 			t,
 			enums.Collection{
 				{
@@ -38,7 +38,7 @@ func TestAll(t *testing.T) {
 		matches, err := enums.All("./testdata/multimatch", "multimatch.Flag")
 		require.NoError(t, err, "error when scanning testdata/multimatch")
 
-		require.Equal(
+		require.ElementsMatch(
 			t,
 			enums.Collection{
 				{
