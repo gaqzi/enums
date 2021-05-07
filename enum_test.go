@@ -1,6 +1,7 @@
 package enums_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -58,7 +59,7 @@ func TestAll(t *testing.T) {
 	})
 }
 
-func TestDiff(t *testing.T) {
+func TestCollection_Diff(t *testing.T) {
 	type val string
 
 	const (
@@ -111,4 +112,64 @@ func TestDiff(t *testing.T) {
 			"expected a diff message",
 		)
 	})
+}
+
+func TestDiff(t *testing.T) {
+	t.Run("Handles all members of the struct", func(t *testing.T) {
+		typ := reflect.TypeOf(enums.Diff{})
+		var allFields []string
+
+		for i := 0; i < typ.NumField(); i++ {
+			allFields = append(allFields, typ.Field(i).Name)
+		}
+
+		require.ElementsMatch(
+			t,
+			[]string{"Missing", "Extra"}, // All handled fields
+			allFields,
+			"when a need field is added to Diff remember to update the test cases below to handle them",
+		)
+	})
+
+	testCases := []struct {
+		name     string
+		diff     enums.Diff
+		expected string
+		isZero   bool
+	}{
+		{
+			name:     "Diff is zero",
+			diff:     enums.Diff{},
+			expected: "<Diff{}>",
+			isZero:   true,
+		},
+		{
+			name: "Missing is set",
+			diff: enums.Diff{Missing: []enums.Enum{
+				{
+					Type:  "full.Flag",
+					Name:  "FlagSomething",
+					Value: "flag-something",
+				},
+			}},
+			expected: "Enums declared but not part of actual:\n" +
+				"\tFlagSomething = flag-something\n",
+		},
+		{
+			name: "Extra is set",
+			diff: enums.Diff{Extra: []string{"hello"}},
+			expected: "Extra values provided but not part of Enums:\n" +
+				"\thello\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("#String: "+tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, tc.diff.String())
+		})
+
+		t.Run("#Zero: "+tc.name, func(t *testing.T) {
+			require.Equal(t, tc.isZero, tc.diff.Zero())
+		})
+	}
 }

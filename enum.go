@@ -81,6 +81,36 @@ type Diff struct {
 	Extra   []string
 }
 
+// Zero returns whether there is nothing in the diff
+func (d Diff) Zero() bool {
+	return len(d.Missing) == 0 && len(d.Extra) == 0
+}
+
+// String outputs a human summary of the values in the diff
+func (d Diff) String() string {
+	var msg string
+
+	if len(d.Missing) > 0 {
+		msg += "Enums declared but not part of actual:\n"
+		for _, v := range d.Missing {
+			msg += fmt.Sprintf("\t%s = %s\n", v.Name, v.Value)
+		}
+	}
+
+	if len(d.Extra) > 0 {
+		msg += "Extra values provided but not part of Enums:\n"
+		for _, v := range d.Extra {
+			msg += fmt.Sprintf("\t%s\n", v)
+		}
+	}
+
+	if len(msg) > 0 {
+		return msg
+	}
+
+	return "<Diff{}>"
+}
+
 // Diff indicates differences between a collection and any slice
 // Because a Collection stores all values as strings the difference is
 // calculated based on the string representation of the value.
