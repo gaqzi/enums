@@ -8,5 +8,5 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-set -x
+[ -n "${DEBUG}${CI}" ] && set -x
 exec golangci-lint run $@
