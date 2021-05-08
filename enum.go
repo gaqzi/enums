@@ -3,7 +3,6 @@ package enums
 import (
 	"fmt"
 	"go/ast"
-	"go/token"
 	"reflect"
 	"strings"
 
@@ -53,11 +52,6 @@ func All(pkg string, typ string) (Collection, error) {
 			for _, v := range decl.Values {
 				switch value := v.(type) {
 				case *ast.BasicLit:
-					if value.Kind == token.STRING || value.Kind == token.CHAR {
-						val = value.Value
-						break
-					}
-
 					val = value.Value
 				default:
 					panic(fmt.Sprintf("unknown type: %T", v))
