@@ -10,7 +10,7 @@ import (
 )
 
 func TestAll(t *testing.T) {
-	t.Run("returns an empty list when no matches found", func(t *testing.T) {
+	t.Run("returns an empty collection when no matches found", func(t *testing.T) {
 		matches, err := enums.All("./testdata/nomatch", "Flag")
 		require.NoError(t, err, "error when scanning testdata/nomatches")
 
@@ -35,7 +35,7 @@ func TestAll(t *testing.T) {
 		)
 	})
 
-	t.Run("returns all matches found on a single line", func(t *testing.T) {
+	t.Run("returns all matches found", func(t *testing.T) {
 		matches, err := enums.All("./testdata/multimatch", "multimatch.Flag")
 		require.NoError(t, err, "error when scanning testdata/multimatch")
 
