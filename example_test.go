@@ -14,10 +14,11 @@ func TestIntegration(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("No error when no difference", func(t *testing.T) {
+		diff := collection.Diff(full.AllFlags())
 		require.True(
 			t,
-			collection.Diff(full.AllFlags()).Zero(),
-			"expected no differences",
+			diff.Zero(),
+			"expected no differences: %s", diff,
 		)
 	})
 
