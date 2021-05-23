@@ -3,6 +3,7 @@ package enums_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gaqzi/enums"
@@ -26,11 +27,11 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("Indicates a difference when one is set", func(t *testing.T) {
-		require.False(
-			t,
-			collection.Diff(full.MissingFlags()).Zero(),
-			"expected to have indicated a diff",
-		)
+		// If you need more control over which flags are part of the
+		// lookup you can modify the returned `enums.Diff` object.
+		diff := collection.Diff(full.MissingFlags())
+
+		assert.False(t, diff.Zero(), "expected to have indicated a diff: %s", diff)
 	})
 
 	t.Run("Handles structs as enum type", func(t *testing.T) {
