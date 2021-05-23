@@ -1,0 +1,18 @@
+package full
+
+type FlagStruct struct {
+	Name      string `enums:"identifier"`
+	DefaultOn bool
+}
+
+var (
+	FlagDefaultOn = FlagStruct{Name: "flag-default-on", DefaultOn: true}
+)
+
+func AllFlagStruct() []FlagStruct {
+	return []FlagStruct{FlagDefaultOn}
+}
+
+func MissingFlagStruct() []FlagStruct {
+	return []FlagStruct{}
+}

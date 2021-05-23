@@ -1,6 +1,7 @@
 package enums_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -111,6 +112,47 @@ func TestCollection_Diff(t *testing.T) {
 			enums.Collection{}.Diff([]val{"m000"}),
 			"expected a diff message",
 		)
+	})
+
+	t.Run("handles structs", func(t *testing.T) {
+		type testStruct struct {
+			FieldA string `enums:"identifier"`
+		}
+		test := testStruct{FieldA: "Hello"}
+		collection := enums.Collection{
+			{
+				Type:      "enums_test.testStruct",
+				Name:      "test",
+				FieldName: "FieldA",
+				Value:     `"Hello"`,
+			},
+		}
+
+		t.Run("uses the first field that has `enum:\"identifier\"` as a tag", func(t *testing.T) {
+			require.Equal(
+				t,
+				enums.Diff{},
+				collection.Diff([]testStruct{test}),
+				"expected no differences",
+			)
+		})
+
+		t.Run("doesn't match fields for other struct types", func(t *testing.T) {
+			type otherStruct struct {
+				FieldA string `enums:"identifier"`
+			}
+			test := otherStruct{FieldA: "Hello"}
+
+			require.Equal(
+				t,
+				enums.Diff{
+					Extra:   []string{fmt.Sprintf("%#v", test)},
+					Missing: collection,
+				},
+				collection.Diff([]otherStruct{test}),
+				"expected to have a different value as incorrect type",
+			)
+		})
 	})
 }
 
