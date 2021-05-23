@@ -1,3 +1,17 @@
+// Package enums helps you find instances when you find cases where you
+// have not updated code to handle all enums you have. This is not a fully
+// automated like exhaustive(https://github.com/nishanths/exhaustive) but
+// rather intended to be used in cases where you might want to apply your own
+// logic while still being warned when new cases pop up.
+//
+// Enums supports basic literals and structs tagged with `enum:"identifier"`.
+//
+// The entry point for enums is the All function which takes a package path
+// and a type and will return a Collection of found instances of that type.
+// A collection can produce a Diff given a slice of objects.
+//
+// There is a helper for the standard case of "match all of this type" in
+// enumstest.NoDiff.
 package enums
 
 import (
@@ -10,10 +24,10 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// Collection contains found matches from All and can be diffed against values
+// Collection contains found matches from All and can be diffed against values.
 type Collection []Enum
 
-// Enum represents a a match of a type found in the AST for a package
+// Enum represents a a match of a type found in the AST for a package.
 type Enum struct {
 	Type      string
 	Name      string
@@ -21,10 +35,10 @@ type Enum struct {
 	Value     string // all values are represented as strings from the AST
 }
 
-// All finds all variables of typ in pkg
-//   pkg is a full or relative path.
-//   typ is a type in the form: pkgname.Type
-// Example: All("./feature", "feature.Flag")
+// All finds variables of typ in pkg.
+//
+// Example:
+//   All("./feature", "feature.Flag")
 func All(pkg string, typ string) (Collection, error) {
 	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedName | packages.NeedDeps}
 	pkgs, err := packages.Load(&cfg, pkg)
@@ -110,18 +124,18 @@ func structValue(exp *ast.CompositeLit) (fieldName string, val string, err error
 	return fieldName, val, err
 }
 
-// Diff contains the result of checking the difference between a Collection and a list of values
+// Diff contains the result of checking the difference between a Collection and a list of values.
 type Diff struct {
 	Missing Collection
 	Extra   []string
 }
 
-// Zero returns whether there is nothing in the diff
+// Zero returns whether there is nothing in the diff.
 func (d Diff) Zero() bool {
 	return len(d.Missing) == 0 && len(d.Extra) == 0
 }
 
-// String outputs a human summary of the values in the diff
+// String outputs a human summary of the values in the diff.
 func (d Diff) String() string {
 	var msg string
 
@@ -146,7 +160,8 @@ func (d Diff) String() string {
 	return "<Diff{}>"
 }
 
-// Diff indicates differences between a collection and any slice
+// Diff indicates differences between a collection and any slice.
+//
 // Because a Collection stores all values as strings the difference is
 // calculated based on the string representation of the value.
 func (e Collection) Diff(actual interface{}) Diff {
