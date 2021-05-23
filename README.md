@@ -16,7 +16,7 @@ ints, and even complex types like functions or structs.
 
 For example, I have an enum type for feature flags. For each request
 I call a 3rdparty service to check the state of each flag, so whenever
-a new flag is created it needs to be added to the All function.
+a new flag is created it needs to be added to the `AllFlags` function.
 
 ```golang
 type Flag string
