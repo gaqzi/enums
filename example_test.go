@@ -52,11 +52,10 @@ func TestIntegration(t *testing.T) {
 				t,
 				enums.Diff{
 					Missing: enums.Collection{
-						enums.Enum{
-							Type:      "github.com/gaqzi/enums/testdata/full.FlagStruct",
-							Name:      "FlagDefaultOn",
-							FieldName: "Name",
-							Value:     `"flag-default-on"`,
+						Type:      "github.com/gaqzi/enums/testdata/full.FlagStruct",
+						FieldName: "Name",
+						Enums: []enums.Enum{
+							{"FlagDefaultOn", `"flag-default-on"`},
 						},
 					},
 				},

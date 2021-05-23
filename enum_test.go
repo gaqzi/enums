@@ -22,13 +22,15 @@ func TestAll(t *testing.T) {
 		matches, err := enums.All("./testdata/singlematch", "singlematch.Flag")
 		require.NoError(t, err, "error when scanning testdata/singlematch")
 
-		require.ElementsMatch(
+		require.Equal(
 			t,
 			enums.Collection{
-				{
-					Type:  "github.com/gaqzi/enums/testdata/singlematch.Flag",
-					Name:  "FlagSomethingCouldBe",
-					Value: `"flag-whatever"`,
+				Type: "github.com/gaqzi/enums/testdata/singlematch.Flag",
+				Enums: []enums.Enum{
+					{
+						Name:  "FlagSomethingCouldBe",
+						Value: `"flag-whatever"`,
+					},
 				},
 			},
 			matches,
@@ -40,18 +42,19 @@ func TestAll(t *testing.T) {
 		matches, err := enums.All("./testdata/multimatch", "multimatch.Flag")
 		require.NoError(t, err, "error when scanning testdata/multimatch")
 
-		require.ElementsMatch(
+		require.Equal(
 			t,
 			enums.Collection{
-				{
-					Type:  "github.com/gaqzi/enums/testdata/multimatch.Flag",
-					Name:  "FlagSomethingCouldBe",
-					Value: `"flag-whatever"`,
-				},
-				{
-					Type:  "github.com/gaqzi/enums/testdata/multimatch.Flag",
-					Name:  "FlagSomethingElse",
-					Value: `"flag-whomever"`,
+				Type: "github.com/gaqzi/enums/testdata/multimatch.Flag",
+				Enums: []enums.Enum{
+					{
+						Name:  "FlagSomethingCouldBe",
+						Value: `"flag-whatever"`,
+					},
+					{
+						Name:  "FlagSomethingElse",
+						Value: `"flag-whomever"`,
+					},
 				},
 			},
 			matches,
@@ -70,12 +73,11 @@ func TestCollection_Diff(t *testing.T) {
 	t.Run("Same values returns an empty string", func(t *testing.T) {
 		require.Equal(
 			t,
-			enums.Diff{},
+			enums.Diff{Missing: enums.Collection{Type: "enums_test.val"}},
 			enums.Collection{
-				{
-					Type:  "enums_test.val",
-					Name:  "test",
-					Value: `"hello"`,
+				Type: "enums_test.val",
+				Enums: []enums.Enum{
+					{"test", `"hello"`},
 				},
 			}.Diff([]val{test}),
 			"expected the same values to have no diff",
@@ -87,18 +89,16 @@ func TestCollection_Diff(t *testing.T) {
 			t,
 			enums.Diff{
 				Missing: enums.Collection{
-					{
-						Type:  "enums_test.val",
-						Name:  "test",
-						Value: `"hello"`,
+					Type: "enums_test.val",
+					Enums: []enums.Enum{
+						{"test", `"hello"`},
 					},
 				},
 			},
 			enums.Collection{
-				{
-					Type:  "enums_test.val",
-					Name:  "test",
-					Value: `"hello"`,
+				Type: "enums_test.val",
+				Enums: []enums.Enum{
+					{"test", `"hello"`},
 				},
 			}.Diff([]val{}),
 			"expected a diff message",
@@ -120,18 +120,22 @@ func TestCollection_Diff(t *testing.T) {
 		}
 		test := testStruct{FieldA: "Hello"}
 		collection := enums.Collection{
-			{
-				Type:      "enums_test.testStruct",
-				Name:      "test",
-				FieldName: "FieldA",
-				Value:     `"Hello"`,
+			Type:      "enums_test.testStruct",
+			FieldName: "FieldA",
+			Enums: []enums.Enum{
+				{"test", `"Hello"`},
 			},
 		}
 
 		t.Run("uses the first field that has `enum:\"identifier\"` as a tag", func(t *testing.T) {
 			require.Equal(
 				t,
-				enums.Diff{},
+				enums.Diff{
+					Missing: enums.Collection{
+						Type:      "enums_test.testStruct",
+						FieldName: "FieldA",
+					},
+				},
 				collection.Diff([]testStruct{test}),
 				"expected no differences",
 			)
@@ -187,11 +191,13 @@ func TestDiff(t *testing.T) {
 		},
 		{
 			name: "Missing is set",
-			diff: enums.Diff{Missing: []enums.Enum{
-				{
-					Type:  "full.Flag",
-					Name:  "FlagSomething",
-					Value: "flag-something",
+			diff: enums.Diff{Missing: enums.Collection{
+				Type: "full.Flag",
+				Enums: []enums.Enum{
+					{
+						Name:  "FlagSomething",
+						Value: "flag-something",
+					},
 				},
 			}},
 			expected: "Enums declared but not part of actual:\n" +

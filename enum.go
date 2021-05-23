@@ -19,20 +19,28 @@ import (
 	"fmt"
 	"go/ast"
 	"reflect"
+	"sort"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
 )
 
 // Collection contains found matches from All and can be diffed against values.
-type Collection []Enum
-
-// Enum represents a a match of a type found in the AST for a package.
-type Enum struct {
-	Type      string
-	Name      string
+type Collection struct {
+	Type      string // the import path of the type
 	FieldName string // if the underlying type is a struct this value is the name of the field that is used to distinguish flags
-	Value     string // all values are represented as strings from the AST
+	Enums     []Enum // all distinct values found
+}
+
+// Enum represents a value for a matched type.
+//
+// Example:
+//   var MyFlag Flag = "Hello"
+// Is equivalent to:
+//   Enum{Name: "MyFlag", Value: "Hello"}
+type Enum struct {
+	Name  string
+	Value string
 }
 
 // All finds variables of typ in pkg.
@@ -43,11 +51,10 @@ func All(pkg string, typ string) (Collection, error) {
 	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedName | packages.NeedDeps}
 	pkgs, err := packages.Load(&cfg, pkg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load package: %w", err)
+		return Collection{}, fmt.Errorf("failed to load package: %w", err)
 	}
 
-	var targets []Enum
-
+	var collection Collection
 	for _, p := range pkgs {
 		for e, t := range p.TypesInfo.Defs {
 			if t == nil {
@@ -73,7 +80,7 @@ func All(pkg string, typ string) (Collection, error) {
 				case *ast.CompositeLit:
 					fieldName, val, err = structValue(value)
 					if err != nil {
-						return nil, err
+						return Collection{}, err
 					}
 				default:
 					// Either a case where it would be hard to distinguish or something not considered so far. Likely the latter.
@@ -81,16 +88,19 @@ func All(pkg string, typ string) (Collection, error) {
 				}
 			}
 
-			targets = append(targets, Enum{
-				Type:      t.Type().String(),
-				Name:      t.Name(),
-				FieldName: fieldName,
-				Value:     val,
+			collection.Type = t.Type().String()
+			collection.FieldName = fieldName
+			collection.Enums = append(collection.Enums, Enum{
+				Name:  t.Name(),
+				Value: val,
 			})
 		}
 	}
 
-	return targets, nil
+	// The values comes out in different order and it made some tests flaky
+	sort.Slice(collection.Enums, func(i, j int) bool { return collection.Enums[i].Name < collection.Enums[j].Name })
+
+	return collection, nil
 }
 
 func structValue(exp *ast.CompositeLit) (fieldName string, val string, err error) {
@@ -132,16 +142,16 @@ type Diff struct {
 
 // Zero returns whether there is nothing in the diff.
 func (d Diff) Zero() bool {
-	return len(d.Missing) == 0 && len(d.Extra) == 0
+	return len(d.Missing.Enums) == 0 && len(d.Extra) == 0
 }
 
 // String outputs a human summary of the values in the diff.
 func (d Diff) String() string {
 	var msg string
 
-	if len(d.Missing) > 0 {
+	if len(d.Missing.Enums) > 0 {
 		msg += "Enums declared but not part of actual:\n"
-		for _, v := range d.Missing {
+		for _, v := range d.Missing.Enums {
 			msg += fmt.Sprintf("\t%s = %s\n", v.Name, v.Value)
 		}
 	}
@@ -164,21 +174,21 @@ func (d Diff) String() string {
 //
 // Because a Collection stores all values as strings the difference is
 // calculated based on the string representation of the value.
-func (e Collection) Diff(actual interface{}) Diff {
+func (c Collection) Diff(actual interface{}) Diff {
 	acTyp := reflect.ValueOf(actual)
 	if acTyp.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("Diff: actual is not a slice: %T", actual))
 	}
 
-	values := make(map[string]Enum, len(e))
-	for _, v := range e {
+	values := make(map[string]Enum, len(c.Enums))
+	for _, v := range c.Enums {
 		values[v.Value] = v
 	}
 
 	var diff Diff
 	for i := 0; i < acTyp.Len(); i++ {
 		item := acTyp.Index(i)
-		val := e.valueFrom(item)
+		val := c.valueFrom(item)
 
 		if _, ok := values[val]; ok {
 			delete(values, val)
@@ -188,21 +198,23 @@ func (e Collection) Diff(actual interface{}) Diff {
 		diff.Extra = append(diff.Extra, val)
 	}
 
-	var missing Collection
-	for _, v := range values {
-		missing = append(missing, v)
+	diff.Missing = Collection{
+		Type:      c.Type,
+		FieldName: c.FieldName,
 	}
-	diff.Missing = missing
+	for _, v := range values {
+		diff.Missing.Enums = append(diff.Missing.Enums, v)
+	}
 
 	return diff
 }
 
-func (e Collection) valueFrom(item reflect.Value) string {
+func (c Collection) valueFrom(item reflect.Value) string {
 	var val string
 
 	switch item.Type().Kind() {
 	case reflect.Struct:
-		val = e.fieldValue(item)
+		val = c.fieldValue(item)
 
 		if val == "" {
 			val = fmt.Sprintf("%#v", item.Interface())
@@ -214,19 +226,18 @@ func (e Collection) valueFrom(item reflect.Value) string {
 	return val
 }
 
-func (e Collection) fieldValue(item reflect.Value) string {
-	if len(e) == 0 {
+func (c Collection) fieldValue(item reflect.Value) string {
+	if len(c.Enums) == 0 {
 		panic("Diff: collection is empty")
 	}
 
-	enum := e[0]
 	typ := item.Type()
 
-	if !strings.HasSuffix(enum.Type, typ.String()) {
+	if !strings.HasSuffix(c.Type, typ.String()) {
 		return ""
 	}
 
-	field, ok := typ.FieldByName(enum.FieldName)
+	field, ok := typ.FieldByName(c.FieldName)
 	if !ok {
 		return ""
 	}
@@ -235,5 +246,5 @@ func (e Collection) fieldValue(item reflect.Value) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%#v", item.FieldByName(enum.FieldName).Interface())
+	return fmt.Sprintf("%#v", item.FieldByName(c.FieldName).Interface())
 }
