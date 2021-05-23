@@ -48,7 +48,7 @@ type Enum struct {
 // Example:
 //   All("./feature", "feature.Flag")
 func All(pkg string, typ string) (Collection, error) {
-	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedName | packages.NeedDeps}
+	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedName}
 	pkgs, err := packages.Load(&cfg, pkg)
 	if err != nil {
 		return Collection{}, fmt.Errorf("failed to load package: %w", err)
