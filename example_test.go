@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gaqzi/enums"
+	"github.com/gaqzi/enums/enumstest"
 	"github.com/gaqzi/enums/testdata/full"
 )
 
@@ -14,11 +15,13 @@ func TestIntegration(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("No error when no difference", func(t *testing.T) {
-		diff := collection.Diff(full.AllFlags())
-		require.True(
+		// Using the helper for the most common scenario
+		enumstest.NoDiff(
 			t,
-			diff.Zero(),
-			"expected no differences: %s", diff,
+			"./testdata/full",
+			"full.Flag",
+			full.AllFlags(),
+			"expected no differences",
 		)
 	})
 
