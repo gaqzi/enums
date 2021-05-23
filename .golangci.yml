@@ -8,5 +8,6 @@ linters-settings:
 
 linters:
   enable:
+    - gocritic
     - gofmt
     - goimports
