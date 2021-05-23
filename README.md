@@ -9,8 +9,8 @@ of a type is accounted for somewhere. There is an overlap with the
 [exhaustive]: https://github.com/nishanths/exhaustive
 
 For the sake of this package an `enum` is a named type with multiple
-values which you're operating on as a collection. They could be strings,
-ints, and even complex types like functions or structs.
+values which you're operating on as a collection. Enums supports what Go 
+refers to as basic literals (strings, numbers) and structs.
 
 ## Example
 
@@ -39,6 +39,19 @@ Using enums we can test that we haven't missed out on a new flag:
 ```golang
 func TestAllFlagsCovered(t *testing.T) {
     enumstest.NoDiff(t, "./feature", "feature.Flag", full.AllFlags())
+}
+```
+
+## Using with structs
+
+We need a way to uniquely identify values in a struct, so the identifier 
+will still have to be a basic literal, and this is done with the 
+`enums:"identifier"` tag.
+
+```golang
+type DefaultFlag struct {
+    Name string `enums:"identifier"`
+    IsOn bool
 }
 ```
 
