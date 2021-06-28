@@ -40,7 +40,7 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("when all flags are present", func(t *testing.T) {
 			diff := fsCollection.Diff(full.AllFlagStruct())
-			require.Falsef(
+			require.Truef(
 				t,
 				diff.Zero(),
 				"expected no differences: %s", diff,
