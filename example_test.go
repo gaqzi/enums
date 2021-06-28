@@ -31,7 +31,7 @@ func TestIntegration(t *testing.T) {
 		// lookup you can modify the returned `enums.Diff` object.
 		diff := collection.Diff(full.MissingFlags())
 
-		assert.True(t, diff.Zero(), "expected to have indicated a diff: %s", diff)
+		assert.False(t, diff.Zero(), "expected to have indicated a diff: %s", diff)
 	})
 
 	t.Run("Handles structs as enum type", func(t *testing.T) {
@@ -40,7 +40,7 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("when all flags are present", func(t *testing.T) {
 			diff := fsCollection.Diff(full.AllFlagStruct())
-			require.Truef(
+			require.Falsef(
 				t,
 				diff.Zero(),
 				"expected no differences: %s", diff,
