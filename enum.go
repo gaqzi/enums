@@ -6,6 +6,12 @@
 //
 // Enums supports basic literals and structs tagged with `enum:"identifier"`.
 //
+// The canonical example of ths package is that you maintain feature flags
+// in your codebase, and you have a function that returns all flags that are
+// relevant for a particular section of code. As any new flag is introduced
+// they need to be considered for inclusion, and it's nice if the test suite
+// enforces the consideration.
+//
 // The entry point for enums is the All function which takes a package path
 // and a type and will return a Collection of found instances of that type.
 // A collection can produce a Diff given a slice of objects.
@@ -34,7 +40,6 @@ type Collection struct {
 
 // Enum represents a value for a matched type.
 //
-// Example:
 //   var MyFlag Flag = "Hello"
 // Is equivalent to:
 //   Enum{Name: "MyFlag", Value: "Hello"}
@@ -44,9 +49,6 @@ type Enum struct {
 }
 
 // All finds variables of typ in pkg.
-//
-// Example:
-//   All("./feature", "feature.Flag")
 func All(pkg string, typ string) (Collection, error) {
 	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedName}
 	pkgs, err := packages.Load(&cfg, pkg)

@@ -1,66 +1,54 @@
 package enums_test
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/gaqzi/enums"
 	"github.com/gaqzi/enums/enumstest"
 	"github.com/gaqzi/enums/testdata/full"
 )
 
-func TestIntegration(t *testing.T) {
+func Example() {
+	// The simplest way of checking if all values are covered:
+	var t *testing.T // so this file can compile
+	enumstest.NoDiff(t, "./testdata/full", "full.Flag", full.AllFlags())
+
+	// To control the process more you can use enums.All and Collection.Diff.
+	// This example is equivalent to the one-liner above:
 	collection, err := enums.All("./testdata/full", "full.Flag")
-	require.NoError(t, err)
+	if err != nil {
+		panic("unexpected error in example" + err.Error())
+	}
 
-	t.Run("No error when no difference", func(t *testing.T) {
-		// Using the helper for the most common scenario
-		enumstest.NoDiff(
-			t,
-			"./testdata/full",
-			"full.Flag",
-			full.AllFlags(),
-			"expected no differences",
-		)
-	})
+	if diff := collection.Diff(full.AllFlags()); !diff.Zero() {
+		fmt.Println("expected to have all flags: " + diff.String())
+	}
 
-	t.Run("Indicates a difference when one is set", func(t *testing.T) {
-		// If you need more control over which flags are part of the
-		// lookup you can modify the returned `enums.Diff` object.
-		diff := collection.Diff(full.MissingFlags())
+	// There are sometimes cases where you don't want to warn about certain values,
+	// but you still want to be told when new ones are created so that you can make
+	// a decision for what to do. So then you can modify the Diff result to suit
+	// your needs.
+	ignoreValues := []full.Flag{full.DeployOneThing}
+	var kept []enums.Enum
 
-		assert.False(t, diff.Zero(), "expected to have indicated a diff: %s", diff)
-	})
+	for _, e := range collection.Enums {
+		var skip bool
+		for _, v := range ignoreValues {
+			if e.Value == fmt.Sprintf("%#v", v) {
+				skip = true
+				break
+			}
+		}
+		if skip {
+			continue
+		}
 
-	t.Run("Handles structs as enum type", func(t *testing.T) {
-		fsCollection, err := enums.All("./testdata/full", "full.FlagStruct")
-		require.NoError(t, err)
+		kept = append(kept, e)
+	}
+	collection.Enums = kept
 
-		t.Run("when all flags are present", func(t *testing.T) {
-			diff := fsCollection.Diff(full.AllFlagStruct())
-			require.Truef(
-				t,
-				diff.Zero(),
-				"expected no differences: %s", diff,
-			)
-		})
-
-		t.Run("when something is missing", func(t *testing.T) {
-			require.Equal(
-				t,
-				enums.Diff{
-					Missing: enums.Collection{
-						Type:      "github.com/gaqzi/enums/testdata/full.FlagStruct",
-						FieldName: "Name",
-						Enums: []enums.Enum{
-							{"FlagDefaultOn", `"flag-default-on"`},
-						},
-					},
-				},
-				fsCollection.Diff(full.MissingFlagStruct()),
-			)
-		})
-	})
+	if diff := collection.Diff(full.MissingFlags()); !diff.Zero() {
+		fmt.Println("expected to have all flags: " + diff.String())
+	}
 }
