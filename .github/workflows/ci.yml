@@ -16,7 +16,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           # Keep this in sync with bin/lint
-          version: v1.39
+          version: v1.42
 
   check-go-mod:
     runs-on: ubuntu-latest

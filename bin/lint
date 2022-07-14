@@ -1,6 +1,6 @@
 #!/bin/bash
 
-required_version=1.39 # Keep this in sync with .github/workflows/ci.yml
+required_version=1.42 # Keep this in sync with .github/workflows/ci.yml
 golangci-lint --version | grep "version ${required_version}" >/dev/null
 if [ $? -ne 0 ]; then
   echo "Wrong version of golangci-lint. Needs ${required_version}" >&2
