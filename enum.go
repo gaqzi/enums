@@ -83,6 +83,7 @@ func All(pkg string, typ string) (Collection, error) {
 				continue
 			}
 
+			// Ignore values that don't match the string of the type we're matching against.
 			if !strings.HasSuffix(t.Type().String(), typ) {
 				continue
 			}
