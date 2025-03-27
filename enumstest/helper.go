@@ -13,7 +13,8 @@ type tHelper interface {
 // NoDiff looks up all types in pkg and asserts they they have all the values from actual
 //
 // Example:
-//   NoDiff(t, "./feature", "feature.Flag", []feature.Flag{"flag1", "flag2"})
+//
+//	NoDiff(t, "./feature", "feature.Flag", []feature.Flag{"flag1", "flag2"})
 func NoDiff(t tHelper, pkg, typ string, actual interface{}, failureMsg ...string) bool {
 	t.Helper()
 
