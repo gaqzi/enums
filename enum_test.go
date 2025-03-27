@@ -61,6 +61,31 @@ func TestAll(t *testing.T) {
 			"expected to have gotten back a single match",
 		)
 	})
+
+	t.Run("does not match a variable declared in a func for the type", func(t *testing.T) {
+		// Fixes https://github.com/gaqzi/enums/issues/38.
+		matches, err := enums.All("./testdata/falsepositiveinfunc", "Flag")
+		require.NoError(t, err, "error when scanning testdata/falsepositiveinfunc")
+
+		require.Equal(
+			t,
+			enums.Collection{
+				Type: "github.com/gaqzi/enums/testdata/falsepositiveinfunc.Flag",
+				Enums: []enums.Enum{
+					{
+						Name:  "AnotherExample",
+						Value: `"hello-there"`,
+					},
+					{
+						Name:  "DeployAllTheThings",
+						Value: `"deploy-all-the-things"`,
+					},
+				},
+			},
+			matches,
+			"expected to only have found the one declared flag and not a variable of the type declared anywhere else",
+		)
+	})
 }
 
 func TestCollection_Diff(t *testing.T) {

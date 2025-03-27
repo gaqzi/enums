@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"go/token"
+	"go/types"
 	"reflect"
 	"sort"
 	"strings"
@@ -62,6 +64,22 @@ func All(pkg string, typ string) (Collection, error) {
 	for _, p := range pkgs {
 		for e, t := range p.TypesInfo.Defs {
 			if t == nil {
+				continue
+			}
+
+			// Handling [issue #38] from GitHub where declarations inside of functions would be found and used,
+			// whereas we only care about package-level declarations.
+			// To be honest, this feels _quite_ hacky but the cases I could think of right now seems covered,
+			// so let's see what else we discover with more use.🤷
+			//
+			// [issue #38]: https://github.com/gaqzi/enums/issues/38
+			if notTopLevelDeclaration := t.Parent() != nil && t.Parent().Parent() != nil && t.Parent().Parent().Pos() != token.NoPos; notTopLevelDeclaration {
+				continue
+			}
+
+			// Ignore slices as they're a collection of the enum and therefore most likely a variable used to
+			// collect the declared types, and not something we want to use directly.
+			if _, ok := t.Type().(*types.Slice); ok {
 				continue
 			}
 
