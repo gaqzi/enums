@@ -35,9 +35,12 @@ type Collection struct {
 // Enum represents a value for a matched type.
 //
 // Example:
-//   var MyFlag Flag = "Hello"
+//
+//	var MyFlag Flag = "Hello"
+//
 // Is equivalent to:
-//   Enum{Name: "MyFlag", Value: "Hello"}
+//
+//	Enum{Name: "MyFlag", Value: "Hello"}
 type Enum struct {
 	Name  string
 	Value string
@@ -46,7 +49,8 @@ type Enum struct {
 // All finds variables of typ in pkg.
 //
 // Example:
-//   All("./feature", "feature.Flag")
+//
+//	All("./feature", "feature.Flag")
 func All(pkg string, typ string) (Collection, error) {
 	cfg := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedName}
 	pkgs, err := packages.Load(&cfg, pkg)
