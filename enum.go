@@ -83,14 +83,20 @@ func All(pkg string, typ string) (Collection, error) {
 				continue
 			}
 
-			// Ignore values that don't match the string of the type we're matching against.
-			if !strings.HasSuffix(t.Type().String(), typ) {
+			// Ignore types that don't have Obj since they definitely can't be turned into a declaration
+			// TODO: Obj is deprecated and there's a new way of getting at this information, look into this new way
+			if e.Obj == nil {
 				continue
 			}
 
 			// A declaration with a value and not a type declaration
 			decl, ok := e.Obj.Decl.(*ast.ValueSpec)
 			if !ok {
+				continue
+			}
+
+			// Ignore values that don't match the string of the type we're matching against.
+			if !strings.HasSuffix(t.Type().String(), typ) {
 				continue
 			}
 
