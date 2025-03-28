@@ -1,21 +1,23 @@
-// Package enums helps you find instances when you find cases where you
-// have not updated code to handle all enums you have. This is not a fully
-// automated like exhaustive(https://github.com/nishanths/exhaustive) but
-// rather intended to be used in cases where you might want to apply your own
-// logic while still being warned when new cases pop up.
+// Package typedecl helps you find cases where you have not updated code to
+// handle all variables of a specific type.
+// This is not a fully automated like [exhaustive], but rather intended
+// to be used in cases where you might want to apply your own logic while
+// still being warned when new cases pop up.
 //
-// Enums supports basic literals and structs tagged with `enum:"identifier"`.
+// typedecl supports basic literals and structs tagged with `typedecl:"identifier"`.
 //
-// The entry point for enums is the All function which takes a package path
-// and a type and will return a Collection of found instances of that type.
-// A collection can produce a Diff given a slice of objects.
+// The entry point is the [All] function which takes a package path
+// and a type expressed as the "pkgname.Type", it will return
+// a [Collection] of found instances of that type.
+// A collection can produce a [Diff] given a slice of objects.
 //
-// There is a helper for the standard case of "match all of this type" in
-// enumstest.NoDiff.
-package enums
+// There is a helper for the standard case of tell me of all missing
+// matches of this type in typedecltest.NoDiff.
+//
+// [exhaustive]: https://github.com/nishanths/exhaustive
+package typedecl
 
 import (
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/token"
@@ -27,14 +29,19 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+const (
+	structTagName       = `typedecl`
+	structTagIdentifier = `identifier`
+)
+
 // Collection contains found matches from All and can be diffed against values.
 type Collection struct {
-	Type      string // the import path of the type
-	FieldName string // if the underlying type is a struct this value is the name of the field that is used to distinguish flags
-	Enums     []Enum // all distinct values found
+	Type      string  // the import path of the type
+	FieldName string  // if the underlying type is a struct this value is the name of the field that is used to distinguish flags
+	Matches   []Match // all distinct values found
 }
 
-// Enum represents a value for a matched type.
+// Match represents a value for a matched type.
 //
 // Example:
 //
@@ -42,8 +49,8 @@ type Collection struct {
 //
 // Is equivalent to:
 //
-//	Enum{Name: "MyFlag", Value: "Hello"}
-type Enum struct {
+//	Match{Name: "MyFlag", Value: "Hello"}
+type Match struct {
 	Name  string
 	Value string
 }
@@ -72,7 +79,7 @@ func All(pkg string, typ string) (Collection, error) {
 			// To be honest, this feels _quite_ hacky but the cases I could think of right now seems covered,
 			// so let's see what else we discover with more use.🤷
 			//
-			// [issue #38]: https://github.com/gaqzi/enums/issues/38
+			// [issue #38]: https://github.com/gaqzi/typedecl/issues/38
 			if notTopLevelDeclaration := t.Parent() != nil && t.Parent().Parent() != nil && t.Parent().Parent().Pos() != token.NoPos; notTopLevelDeclaration {
 				continue
 			}
@@ -119,15 +126,15 @@ func All(pkg string, typ string) (Collection, error) {
 
 			collection.Type = t.Type().String()
 			collection.FieldName = fieldName
-			collection.Enums = append(collection.Enums, Enum{
+			collection.Matches = append(collection.Matches, Match{
 				Name:  t.Name(),
 				Value: val,
 			})
 		}
 	}
 
-	// The values comes out in different order and it made some tests flaky
-	sort.Slice(collection.Enums, func(i, j int) bool { return collection.Enums[i].Name < collection.Enums[j].Name })
+	// The values come out in different order, and it made some tests flaky
+	sort.Slice(collection.Matches, func(i, j int) bool { return collection.Matches[i].Name < collection.Matches[j].Name })
 
 	return collection, nil
 }
@@ -138,10 +145,10 @@ func structValue(exp *ast.CompositeLit) (fieldName string, val string, err error
 	struc := decl.Type.(*ast.StructType)
 
 	for i, f := range struc.Fields.List {
-		if strings.Contains(f.Tag.Value, "`enums:\"identifier\"`") {
+		if strings.Contains(f.Tag.Value, "`"+structTagName+":\""+structTagIdentifier+"\"`") {
 			if len(f.Names) > 1 {
 				// No idea if or how this could happen, so let's ask for help
-				panic(fmt.Errorf("struct identifier field has more than one Names, please file a bug report with example code: %#v", f.Names))
+				panic(fmt.Errorf("struct identifier field has more than one Name, please file a bug report with example code: %#v", f.Names))
 			}
 			fieldName = f.Names[0].String()
 
@@ -157,7 +164,7 @@ func structValue(exp *ast.CompositeLit) (fieldName string, val string, err error
 	}
 
 	if val == "" {
-		return "", "", errors.New(`no struct tag with enum:"identifier" found`)
+		return "", "", fmt.Errorf(`no struct tag with %s:"%s" found`, structTagName, structTagIdentifier)
 	}
 
 	return fieldName, val, err
@@ -171,22 +178,22 @@ type Diff struct {
 
 // Zero returns whether there is nothing in the diff.
 func (d Diff) Zero() bool {
-	return len(d.Missing.Enums) == 0 && len(d.Extra) == 0
+	return len(d.Missing.Matches) == 0 && len(d.Extra) == 0
 }
 
 // String outputs a human summary of the values in the diff.
 func (d Diff) String() string {
 	var msg string
 
-	if len(d.Missing.Enums) > 0 {
-		msg += "Enums declared but not part of actual:\n"
-		for _, v := range d.Missing.Enums {
+	if len(d.Missing.Matches) > 0 {
+		msg += "Matches declared but not part of actual:\n"
+		for _, v := range d.Missing.Matches {
 			msg += fmt.Sprintf("\t%s = %s\n", v.Name, v.Value)
 		}
 	}
 
 	if len(d.Extra) > 0 {
-		msg += "Extra values provided but not part of Enums:\n"
+		msg += "Extra values provided but not part of Matches:\n"
 		for _, v := range d.Extra {
 			msg += fmt.Sprintf("\t%s\n", v)
 		}
@@ -209,8 +216,8 @@ func (c Collection) Diff(actual interface{}) Diff {
 		panic(fmt.Sprintf("Diff: actual is not a slice: %T", actual))
 	}
 
-	values := make(map[string]Enum, len(c.Enums))
-	for _, v := range c.Enums {
+	values := make(map[string]Match, len(c.Matches))
+	for _, v := range c.Matches {
 		values[v.Value] = v
 	}
 
@@ -232,7 +239,7 @@ func (c Collection) Diff(actual interface{}) Diff {
 		FieldName: c.FieldName,
 	}
 	for _, v := range values {
-		diff.Missing.Enums = append(diff.Missing.Enums, v)
+		diff.Missing.Matches = append(diff.Missing.Matches, v)
 	}
 
 	return diff
@@ -256,7 +263,7 @@ func (c Collection) valueFrom(item reflect.Value) string {
 }
 
 func (c Collection) fieldValue(item reflect.Value) string {
-	if len(c.Enums) == 0 {
+	if len(c.Matches) == 0 {
 		panic("Diff: collection is empty")
 	}
 
@@ -271,7 +278,7 @@ func (c Collection) fieldValue(item reflect.Value) string {
 		return ""
 	}
 
-	if tag, ok := field.Tag.Lookup("enums"); !ok || tag != "identifier" {
+	if tag, ok := field.Tag.Lookup(structTagName); !ok || tag != structTagIdentifier {
 		return ""
 	}
 

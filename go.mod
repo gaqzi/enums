@@ -1,4 +1,4 @@
-module github.com/gaqzi/enums
+module github.com/gaqzi/typedecl
 
 go 1.23
 

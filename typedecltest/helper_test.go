@@ -1,12 +1,12 @@
-package enumstest_test
+package typedecltest_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gaqzi/enums/enumstest"
-	"github.com/gaqzi/enums/testdata/full"
+	"github.com/gaqzi/typedecl/testdata/full"
+	"github.com/gaqzi/typedecl/typedecltest"
 )
 
 type tLogger struct {
@@ -31,7 +31,7 @@ func TestNoDiff(t *testing.T) {
 	t.Run("Does not call fail or log when there is no diff", func(t *testing.T) {
 		tl := new(tLogger)
 
-		require.True(t, enumstest.NoDiff(
+		require.True(t, typedecltest.NoDiff(
 			tl,
 			"../testdata/full",
 			"full.Flag",
@@ -50,7 +50,7 @@ func TestNoDiff(t *testing.T) {
 	t.Run("Fails the case when diffs are found", func(t *testing.T) {
 		tl := new(tLogger)
 
-		require.False(t, enumstest.NoDiff(
+		require.False(t, typedecltest.NoDiff(
 			tl,
 			"../testdata/full",
 			"full.Flag",
@@ -66,7 +66,7 @@ func TestNoDiff(t *testing.T) {
 				log: []interface{}{
 					[]interface{}{
 						"expected a missing difference\n" +
-							"Enums declared but not part of actual:\n" +
+							"Matches declared but not part of actual:\n" +
 							"\tDeployOneThing = \"deploy-one-thing\"\n",
 					},
 				},
