@@ -1,7 +1,7 @@
-package enumstest
+package typedecltest
 
 import (
-	"github.com/gaqzi/enums"
+	"github.com/gaqzi/typedecl"
 )
 
 type tHelper interface {
@@ -10,7 +10,7 @@ type tHelper interface {
 	Fail()
 }
 
-// NoDiff looks up all types in pkg and asserts they they have all the values from actual
+// NoDiff looks up all types in pkg and asserts they have all the values from actual.
 //
 // Example:
 //
@@ -18,9 +18,9 @@ type tHelper interface {
 func NoDiff(t tHelper, pkg, typ string, actual interface{}, failureMsg ...string) bool {
 	t.Helper()
 
-	collection, err := enums.All(pkg, typ)
+	collection, err := typedecl.All(pkg, typ)
 	if err != nil {
-		t.Log("failed to load enums.All: " + err.Error())
+		t.Log("failed to load typedecl.All: " + err.Error())
 		t.Fail()
 		return false
 	}

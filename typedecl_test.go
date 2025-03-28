@@ -1,4 +1,4 @@
-package enums_test
+package typedecl_test
 
 import (
 	"fmt"
@@ -7,26 +7,26 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gaqzi/enums"
+	"github.com/gaqzi/typedecl"
 )
 
 func TestAll(t *testing.T) {
 	t.Run("returns an empty collection when no matches found", func(t *testing.T) {
-		matches, err := enums.All("./testdata/nomatch", "Flag")
+		matches, err := typedecl.All("./testdata/nomatch", "Flag")
 		require.NoError(t, err, "error when scanning testdata/nomatches")
 
 		require.Empty(t, matches, "expected to not have found any matches")
 	})
 
 	t.Run("when one match found return it", func(t *testing.T) {
-		matches, err := enums.All("./testdata/singlematch", "singlematch.Flag")
+		matches, err := typedecl.All("./testdata/singlematch", "singlematch.Flag")
 		require.NoError(t, err, "error when scanning testdata/singlematch")
 
 		require.Equal(
 			t,
-			enums.Collection{
-				Type: "github.com/gaqzi/enums/testdata/singlematch.Flag",
-				Enums: []enums.Enum{
+			typedecl.Collection{
+				Type: "github.com/gaqzi/typedecl/testdata/singlematch.Flag",
+				Matches: []typedecl.Match{
 					{
 						Name:  "FlagSomethingCouldBe",
 						Value: `"flag-whatever"`,
@@ -39,14 +39,14 @@ func TestAll(t *testing.T) {
 	})
 
 	t.Run("returns all matches found", func(t *testing.T) {
-		matches, err := enums.All("./testdata/multimatch", "multimatch.Flag")
+		matches, err := typedecl.All("./testdata/multimatch", "multimatch.Flag")
 		require.NoError(t, err, "error when scanning testdata/multimatch")
 
 		require.Equal(
 			t,
-			enums.Collection{
-				Type: "github.com/gaqzi/enums/testdata/multimatch.Flag",
-				Enums: []enums.Enum{
+			typedecl.Collection{
+				Type: "github.com/gaqzi/typedecl/testdata/multimatch.Flag",
+				Matches: []typedecl.Match{
 					{
 						Name:  "FlagSomethingCouldBe",
 						Value: `"flag-whatever"`,
@@ -63,15 +63,15 @@ func TestAll(t *testing.T) {
 	})
 
 	t.Run("does not match a variable declared in a func for the type", func(t *testing.T) {
-		// Fixes https://github.com/gaqzi/enums/issues/38.
-		matches, err := enums.All("./testdata/falsepositiveinfunc", "Flag")
+		// Fixes https://github.com/gaqzi/typedecl/issues/38.
+		matches, err := typedecl.All("./testdata/falsepositiveinfunc", "Flag")
 		require.NoError(t, err, "error when scanning testdata/falsepositiveinfunc")
 
 		require.Equal(
 			t,
-			enums.Collection{
-				Type: "github.com/gaqzi/enums/testdata/falsepositiveinfunc.Flag",
-				Enums: []enums.Enum{
+			typedecl.Collection{
+				Type: "github.com/gaqzi/typedecl/testdata/falsepositiveinfunc.Flag",
+				Matches: []typedecl.Match{
 					{
 						Name:  "AnotherExample",
 						Value: `"hello-there"`,
@@ -98,10 +98,10 @@ func TestCollection_Diff(t *testing.T) {
 	t.Run("Same values returns an empty string", func(t *testing.T) {
 		require.Equal(
 			t,
-			enums.Diff{Missing: enums.Collection{Type: "enums_test.val"}},
-			enums.Collection{
-				Type: "enums_test.val",
-				Enums: []enums.Enum{
+			typedecl.Diff{Missing: typedecl.Collection{Type: "typedecl_test.val"}},
+			typedecl.Collection{
+				Type: "typedecl_test.val",
+				Matches: []typedecl.Match{
 					{"test", `"hello"`},
 				},
 			}.Diff([]val{test}),
@@ -112,17 +112,17 @@ func TestCollection_Diff(t *testing.T) {
 	t.Run("missing values are shown", func(t *testing.T) {
 		require.Equal(
 			t,
-			enums.Diff{
-				Missing: enums.Collection{
-					Type: "enums_test.val",
-					Enums: []enums.Enum{
+			typedecl.Diff{
+				Missing: typedecl.Collection{
+					Type: "typedecl_test.val",
+					Matches: []typedecl.Match{
 						{"test", `"hello"`},
 					},
 				},
 			},
-			enums.Collection{
-				Type: "enums_test.val",
-				Enums: []enums.Enum{
+			typedecl.Collection{
+				Type: "typedecl_test.val",
+				Matches: []typedecl.Match{
 					{"test", `"hello"`},
 				},
 			}.Diff([]val{}),
@@ -133,31 +133,31 @@ func TestCollection_Diff(t *testing.T) {
 	t.Run("extra values are shown", func(t *testing.T) {
 		require.Equal(
 			t,
-			enums.Diff{Extra: []string{`"m000"`}},
-			enums.Collection{}.Diff([]val{"m000"}),
+			typedecl.Diff{Extra: []string{`"m000"`}},
+			typedecl.Collection{}.Diff([]val{"m000"}),
 			"expected a diff message",
 		)
 	})
 
 	t.Run("handles structs", func(t *testing.T) {
 		type testStruct struct {
-			FieldA string `enums:"identifier"`
+			FieldA string `typedecl:"identifier"`
 		}
 		test := testStruct{FieldA: "Hello"}
-		collection := enums.Collection{
-			Type:      "enums_test.testStruct",
+		collection := typedecl.Collection{
+			Type:      "typedecl_test.testStruct",
 			FieldName: "FieldA",
-			Enums: []enums.Enum{
+			Matches: []typedecl.Match{
 				{"test", `"Hello"`},
 			},
 		}
 
-		t.Run("uses the first field that has `enum:\"identifier\"` as a tag", func(t *testing.T) {
+		t.Run("uses the first field that has `typedecl:\"identifier\"` as a tag", func(t *testing.T) {
 			require.Equal(
 				t,
-				enums.Diff{
-					Missing: enums.Collection{
-						Type:      "enums_test.testStruct",
+				typedecl.Diff{
+					Missing: typedecl.Collection{
+						Type:      "typedecl_test.testStruct",
 						FieldName: "FieldA",
 					},
 				},
@@ -168,13 +168,13 @@ func TestCollection_Diff(t *testing.T) {
 
 		t.Run("doesn't match fields for other struct types", func(t *testing.T) {
 			type otherStruct struct {
-				FieldA string `enums:"identifier"`
+				FieldA string `typedecl:"identifier"`
 			}
 			test := otherStruct{FieldA: "Hello"}
 
 			require.Equal(
 				t,
-				enums.Diff{
+				typedecl.Diff{
 					Extra:   []string{fmt.Sprintf("%#v", test)},
 					Missing: collection,
 				},
@@ -187,7 +187,7 @@ func TestCollection_Diff(t *testing.T) {
 
 func TestDiff(t *testing.T) {
 	t.Run("Handles all members of the struct", func(t *testing.T) {
-		typ := reflect.TypeOf(enums.Diff{})
+		typ := reflect.TypeOf(typedecl.Diff{})
 		var allFields []string
 
 		for i := 0; i < typ.NumField(); i++ {
@@ -204,34 +204,34 @@ func TestDiff(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		diff     enums.Diff
+		diff     typedecl.Diff
 		expected string
 		isZero   bool
 	}{
 		{
 			name:     "Diff is zero",
-			diff:     enums.Diff{},
+			diff:     typedecl.Diff{},
 			expected: "<Diff{}>",
 			isZero:   true,
 		},
 		{
 			name: "Missing is set",
-			diff: enums.Diff{Missing: enums.Collection{
+			diff: typedecl.Diff{Missing: typedecl.Collection{
 				Type: "full.Flag",
-				Enums: []enums.Enum{
+				Matches: []typedecl.Match{
 					{
 						Name:  "FlagSomething",
 						Value: "flag-something",
 					},
 				},
 			}},
-			expected: "Enums declared but not part of actual:\n" +
+			expected: "Matches declared but not part of actual:\n" +
 				"\tFlagSomething = flag-something\n",
 		},
 		{
 			name: "Extra is set",
-			diff: enums.Diff{Extra: []string{"hello"}},
-			expected: "Extra values provided but not part of Enums:\n" +
+			diff: typedecl.Diff{Extra: []string{"hello"}},
+			expected: "Extra values provided but not part of Matches:\n" +
 				"\thello\n",
 		},
 	}

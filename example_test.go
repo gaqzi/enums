@@ -1,4 +1,4 @@
-package enums_test
+package typedecl_test
 
 import (
 	"testing"
@@ -6,18 +6,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gaqzi/enums"
-	"github.com/gaqzi/enums/enumstest"
-	"github.com/gaqzi/enums/testdata/full"
+	"github.com/gaqzi/typedecl"
+	"github.com/gaqzi/typedecl/testdata/full"
+	"github.com/gaqzi/typedecl/typedecltest"
 )
 
 func TestIntegration(t *testing.T) {
-	collection, err := enums.All("./testdata/full", "full.Flag")
+	collection, err := typedecl.All("./testdata/full", "full.Flag")
 	require.NoError(t, err)
 
 	t.Run("No error when no difference", func(t *testing.T) {
 		// Using the helper for the most common scenario
-		enumstest.NoDiff(
+		typedecltest.NoDiff(
 			t,
 			"./testdata/full",
 			"full.Flag",
@@ -28,14 +28,14 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("Indicates a difference when one is set", func(t *testing.T) {
 		// If you need more control over which flags are part of the
-		// lookup you can modify the returned `enums.Diff` object.
+		// lookup you can modify the returned `typedecl.Diff` object.
 		diff := collection.Diff(full.MissingFlags())
 
 		assert.False(t, diff.Zero(), "expected to have indicated a diff: %s", diff)
 	})
 
-	t.Run("Handles structs as enum type", func(t *testing.T) {
-		fsCollection, err := enums.All("./testdata/full", "full.FlagStruct")
+	t.Run("Handles structs", func(t *testing.T) {
+		fsCollection, err := typedecl.All("./testdata/full", "full.FlagStruct")
 		require.NoError(t, err)
 
 		t.Run("when all flags are present", func(t *testing.T) {
@@ -50,11 +50,11 @@ func TestIntegration(t *testing.T) {
 		t.Run("when something is missing", func(t *testing.T) {
 			require.Equal(
 				t,
-				enums.Diff{
-					Missing: enums.Collection{
-						Type:      "github.com/gaqzi/enums/testdata/full.FlagStruct",
+				typedecl.Diff{
+					Missing: typedecl.Collection{
+						Type:      "github.com/gaqzi/typedecl/testdata/full.FlagStruct",
 						FieldName: "Name",
-						Enums: []enums.Enum{
+						Matches: []typedecl.Match{
 							{"FlagDefaultOn", `"flag-default-on"`},
 						},
 					},

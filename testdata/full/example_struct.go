@@ -1,7 +1,7 @@
 package full
 
 type FlagStruct struct {
-	Name      string `enums:"identifier"`
+	Name      string `typedecl:"identifier"`
 	DefaultOn bool
 }
 

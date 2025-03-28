@@ -20,7 +20,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/gaqzi/enums
+        - github.com/gaqzi/typedecl
   exclusions:
     generated: lax
     paths:
