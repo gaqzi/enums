@@ -17,3 +17,9 @@ func FalsePositive() []Flag {
 
 	return myVar
 }
+
+type example struct{}
+
+func (e *example) Method() Flag {
+	return "m000"
+}
