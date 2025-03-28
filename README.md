@@ -1,7 +1,7 @@
 typedecl
 =====
 
-[![godocs.io](http://godocs.io/github.com/gaqzi/typedecl.svg)](http://godocs.io/github.com/gaqzi/typedecl)?status.svg)](http://godocs.io/github.com/gaqzi/typedecl)
+[![godocs.io](http://godocs.io/github.com/gaqzi/typedecl?status.svg)](http://godocs.io/github.com/gaqzi/typedecl)
 
 Uses the AST to find all variables of a certain type in a package. 
 This is useful for cases where you need to ensure that all values 
